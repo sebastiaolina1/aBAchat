@@ -1,9 +1,4 @@
 
-/* ========================================
-   aBAChat - A Behring Academy Chat
-   JavaScript + Firebase
-======================================== */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 
 import {
@@ -21,14 +16,24 @@ import {
     setDoc,
     addDoc,
     collection,
-    getDocs,
-    serverTimestamp
+    onSnapshot,
+    serverTimestamp,
+    query,
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
-/* ========================================
-   1. CONFIGURAÇÃO DO FIREBASE
-======================================== */
+
+// ==========================================
+// FIREBASE
+// ==========================================
 
 const firebaseConfig = {
     apiKey: "AIzaSyBUE-a-pftJTQCUmcTvKRzMDOMooNlVvk0",
@@ -40,970 +45,822 @@ const firebaseConfig = {
     measurementId: "G-E5G9EQXREZ"
 };
 
-
-// Inicialização
-
-const firebaseApp = initializeApp(firebaseConfig);
-
-const auth = getAuth(firebaseApp);
-
-const db = getFirestore(firebaseApp);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 
-/* ========================================
-   2. ELEMENTOS PRINCIPAIS
-======================================== */
+// ==========================================
+// CONFIGURAÇÕES
+// ==========================================
+
+const ADMIN_EMAIL = "sebastiaolina1@gmail.com";
+const DEFAULT_PHOTO = "https://placehold.co/160x160?text=Abachat";
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+let isRegistering = false;
+let currentUser = null;
+let currentProfile = {};
+let allProfiles = [];
+let activeFilter = "todos";
+
+let unsubscribeProfiles = null;
+let unsubscribeMessages = null;
+
+
+// ==========================================
+// ELEMENTOS
+// ==========================================
 
 const loginScreen = document.getElementById("loginScreen");
 const appScreen = document.getElementById("appScreen");
 
-const logoutButton = document.getElementById("logoutButton");
-
+const loginForm = document.getElementById("emailLoginForm");
 const loginFeedback = document.getElementById("loginFeedback");
 
-const emailLoginForm = document.getElementById("emailLoginForm");
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-const loginSubmit = document.getElementById("loginSubmit");
-
-const toggleAuthMode = document.getElementById("toggleAuthMode");
-const loginModeText = document.getElementById("loginModeText");
-
-let isRegistering = false;
-
-let currentUser = null;
-let currentProfile = null;
-let communityUsers = [];
-let selectedFilter = "todos";
+const profileForm = document.getElementById("profileForm");
+const meetingForm = document.getElementById("meetingForm");
+const channelForm = document.getElementById("channelForm");
 
 
-/* ========================================
-   3. FUNÇÕES AUXILIARES
-======================================== */
+// ==========================================
+// UTILITÁRIOS
+// ==========================================
 
-function showFeedback(element, message, success = true) {
-
-    if (!element) return;
-
+function showFeedback(element, message, success = false) {
     element.textContent = message;
+    element.style.color = success ? "#365b2b" : "#b33c32";
+}
 
-    element.style.color = success
-        ? "#527d3c"
-        : "#c0392b";
+function escapeText(value) {
+    return String(value ?? "");
+}
 
+function getDisplayName(profile) {
+    return profile.displayName || profile.name || "Participante";
+}
+
+function getPhoto(profile) {
+    return profile.photoURL || DEFAULT_PHOTO;
+}
+
+function formatDate(timestamp) {
+    if (!timestamp || !timestamp.toDate) return "";
+
+    return timestamp.toDate().toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 }
 
 
-function getDefaultPhoto(user) {
+// ==========================================
+// LOGIN E CADASTRO
+// ==========================================
 
-    return user?.photoURL ||
-        "https://placehold.co/120x120?text=User";
-
-}
-
-
-function normalizeRole(role) {
-
-    const allowedRoles = [
-        "aluno",
-        "mentor",
-        "professor"
-    ];
-
-    return allowedRoles.includes(role)
-        ? role
-        : "aluno";
-
-}
-
-
-function roleLabel(role) {
-
-    const labels = {
-        aluno: "Aluno",
-        mentor: "Mentor",
-        professor: "Professor"
-    };
-
-    return labels[normalizeRole(role)];
-
-}
-
-
-/* ========================================
-   4. LOGIN E CADASTRO
-   COM E-MAIL E SENHA
-======================================== */
-
-// Alternar entre login e cadastro
-
-toggleAuthMode.addEventListener("click", () => {
-
+document.getElementById("toggleAuthMode").addEventListener("click", () => {
     isRegistering = !isRegistering;
 
-    loginModeText.textContent = isRegistering
-        ? "Crie sua conta no aBAChat"
-        : "Entre na sua conta";
+    document.getElementById("loginModeText").textContent =
+        isRegistering ? "Criar sua conta" : "Entre na sua conta";
 
-    loginSubmit.textContent = isRegistering
-        ? "Criar conta"
-        : "Entrar";
+    document.getElementById("loginSubmit").textContent =
+        isRegistering ? "Criar conta" : "Entrar";
 
-    toggleAuthMode.textContent = isRegistering
-        ? "Já tem uma conta? Entrar"
-        : "Não tem uma conta? Criar conta";
+    document.getElementById("loginSwitchText").textContent =
+        isRegistering ? "Já possui uma conta?" : "Ainda não tem uma conta?";
 
-    loginPassword.value = "";
+    document.getElementById("toggleAuthMode").textContent =
+        isRegistering ? "Fazer login" : "Criar conta";
 
-    showFeedback(loginFeedback, "");
+    document.getElementById("loginPassword").autocomplete =
+        isRegistering ? "new-password" : "current-password";
 
+    loginFeedback.textContent = "";
 });
 
-
-// Enviar formulário
-
-emailLoginForm.addEventListener("submit", async (event) => {
-
+loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const email = loginEmail.value.trim();
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const button = document.getElementById("loginSubmit");
 
-    const password = loginPassword.value;
-
-    if (!email || !password) {
-
-        showFeedback(
-            loginFeedback,
-            "Preencha todos os campos.",
-            false
-        );
-
-        return;
-
-    }
+    button.disabled = true;
+    button.textContent = "Aguarde...";
 
     try {
-
-        loginSubmit.disabled = true;
-
-        loginSubmit.textContent = isRegistering
-            ? "Criando conta..."
-            : "Entrando...";
-
-        showFeedback(loginFeedback, "");
-
         if (isRegistering) {
-
-            await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-
+            await createUserWithEmailAndPassword(auth, email, password);
         } else {
-
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-
+            await signInWithEmailAndPassword(auth, email, password);
         }
 
     } catch (error) {
-
-        console.error("Erro na autenticação:", error);
+        console.error(error);
 
         const errors = {
-
-            "auth/invalid-email":
-                "Digite um e-mail válido.",
-
-            "auth/invalid-credential":
-                "E-mail ou senha incorretos.",
-
-            "auth/email-already-in-use":
-                "Este e-mail já possui uma conta.",
-
-            "auth/weak-password":
-                "A senha precisa ter pelo menos 6 caracteres.",
-
-            "auth/user-not-found":
-                "Não existe uma conta com este e-mail.",
-
-            "auth/wrong-password":
-                "Senha incorreta.",
-
-            "auth/too-many-requests":
-                "Muitas tentativas. Tente novamente mais tarde.",
-
-            "auth/operation-not-allowed":
-                "Ative o login por e-mail e senha no Firebase."
-
+            "auth/email-already-in-use": "Este e-mail já possui uma conta.",
+            "auth/invalid-email": "Digite um e-mail válido.",
+            "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+            "auth/invalid-credential": "E-mail ou senha incorretos.",
+            "auth/user-not-found": "Conta não encontrada.",
+            "auth/wrong-password": "Senha incorreta.",
+            "auth/too-many-requests": "Muitas tentativas. Tente novamente mais tarde."
         };
 
         showFeedback(
             loginFeedback,
-            errors[error.code] ||
-            "Não foi possível realizar a operação.",
-            false
+            errors[error.code] || "Não foi possível realizar a operação."
         );
 
     } finally {
-
-        loginSubmit.disabled = false;
-
-        loginSubmit.textContent = isRegistering
-            ? "Criar conta"
-            : "Entrar";
-
+        button.disabled = false;
+        button.textContent = isRegistering ? "Criar conta" : "Entrar";
     }
-
 });
 
 
-/* ========================================
-   5. SAIR DA CONTA
-======================================== */
-
-logoutButton.addEventListener("click", async () => {
-
-    try {
-
-        await signOut(auth);
-
-    } catch (error) {
-
-        console.error("Erro ao sair:", error);
-
-        alert("Não foi possível sair da conta.");
-
-    }
-
-});
-
-
-/* ========================================
-   6. OBSERVAR AUTENTICAÇÃO
-======================================== */
+// ==========================================
+// AUTENTICAÇÃO
+// ==========================================
 
 onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
 
-    if (user) {
-
-        currentUser = user;
-
-        loginScreen.classList.add("hidden");
-
-        appScreen.classList.remove("hidden");
-
-        await loadUserProfile();
-
-        await loadCommunity();
-
-    } else {
-
-        currentUser = null;
-
-        currentProfile = null;
-
-        communityUsers = [];
-
+    if (!user) {
+        loginScreen.classList.remove("hidden");
         appScreen.classList.add("hidden");
 
-        loginScreen.classList.remove("hidden");
+        if (unsubscribeProfiles) unsubscribeProfiles();
+        if (unsubscribeMessages) unsubscribeMessages();
 
+        unsubscribeProfiles = null;
+        unsubscribeMessages = null;
+
+        return;
     }
 
+    loginScreen.classList.add("hidden");
+    appScreen.classList.remove("hidden");
+
+    try {
+        await loadProfile();
+        startCommunityListener();
+        startChannelListener();
+        updateHeader();
+
+    } catch (error) {
+        console.error(error);
+        alert("Não foi possível carregar os dados do perfil. Verifique as regras do Firestore.");
+    }
 });
 
 
-/* ========================================
-   7. CARREGAR PERFIL
-======================================== */
+// ==========================================
+// PERFIL
+// ==========================================
 
-async function loadUserProfile() {
+async function loadProfile() {
+    const profileRef = doc(db, "profiles", currentUser.uid);
+    const profileSnap = await getDoc(profileRef);
 
-    if (!currentUser) return;
+    if (!profileSnap.exists()) {
+        currentProfile = {
+            name: "",
+            displayName: "",
+            email: currentUser.email,
+            photoURL: "",
+            bannerURL: "",
+            turma: "",
+            trilha: "",
+            instagram: "",
+            description: ""
+        };
 
-    try {
-
-        const profileRef = doc(
-            db,
-            "profiles",
-            currentUser.uid
-        );
-
-        const profileSnapshot = await getDoc(profileRef);
-
-        if (profileSnapshot.exists()) {
-
-            currentProfile = profileSnapshot.data();
-
-        } else {
-
-            currentProfile = {
-
-                name: currentUser.displayName || "Novo usuário",
-
-                email: currentUser.email || "",
-
-                photo: getDefaultPhoto(currentUser),
-
-                turma: "",
-
-                description: "",
-
-                role: "aluno"
-
-            };
-
-            await setDoc(profileRef, {
-
-                ...currentProfile,
-
-                criadoEm: serverTimestamp()
-
-            });
-
-        }
-
-        updateProfileInterface();
-
-    } catch (error) {
-
-        console.error("Erro ao carregar perfil:", error);
-
-        alert(
-            "Não foi possível carregar seu perfil. " +
-            "Verifique as regras do Firestore."
-        );
-
+        await setDoc(profileRef, {
+            ...currentProfile,
+            createdAt: serverTimestamp()
+        });
+    } else {
+        currentProfile = profileSnap.data();
     }
 
-}
+    document.getElementById("profileName").value =
+        currentProfile.name || "";
 
-
-/* ========================================
-   8. ATUALIZAR INTERFACE DO PERFIL
-======================================== */
-
-function updateProfileInterface() {
-
-    if (!currentUser || !currentProfile) return;
-
-    const name =
-        currentProfile.name ||
-        currentUser.displayName ||
-        "Usuário";
-
-    const photo =
-        currentProfile.photo ||
-        getDefaultPhoto(currentUser);
-
-    document.getElementById("headerUserName").textContent = name;
-
-    document.getElementById("headerUserPhoto").src = photo;
-
-    document.getElementById("welcomeName").textContent = name;
-
-    document.getElementById("profileName").textContent = name;
-
-    document.getElementById("profileEmail").textContent =
-        currentUser.email || "";
-
-    document.getElementById("profilePhoto").src = photo;
-
-    document.getElementById("profileDisplayName").value = name;
+    document.getElementById("profileDisplayName").value =
+        currentProfile.displayName || "";
 
     document.getElementById("profileClass").value =
         currentProfile.turma || "";
 
+    document.getElementById("profileTrack").value =
+        currentProfile.trilha || "";
+
+    document.getElementById("profileInstagram").value =
+        currentProfile.instagram || "";
+
     document.getElementById("profileDescription").value =
         currentProfile.description || "";
 
+    document.getElementById("profilePreviewName").textContent =
+        getDisplayName(currentProfile);
+
+    document.getElementById("profilePhotoPreview").src =
+        getPhoto(currentProfile);
+
+    document.getElementById("bannerPreview").style.backgroundImage =
+        currentProfile.bannerURL
+            ? `url("${currentProfile.bannerURL}")`
+            : "";
+
+    document.getElementById("profileEmail")?.setAttribute(
+        "value",
+        currentUser.email || ""
+    );
+
+    updateHeader();
 }
 
 
-/* ========================================
-   9. SALVAR PERFIL
-======================================== */
+// ==========================================
+// PRÉVIA DAS IMAGENS
+// ==========================================
 
-const profileForm = document.getElementById("profileForm");
+function previewImage(input, callback) {
+    input.addEventListener("change", () => {
+        const file = input.files[0];
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Selecione um arquivo de imagem.");
+            input.value = "";
+            return;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            alert("A imagem deve ter no máximo 5 MB.");
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => callback(reader.result);
+        reader.readAsDataURL(file);
+    });
+}
+
+const photoInput = document.getElementById("profilePhotoFile");
+const bannerInput = document.getElementById("profileBannerFile");
+
+previewImage(photoInput, (image) => {
+    document.getElementById("profilePhotoPreview").src = image;
+});
+
+previewImage(bannerInput, (image) => {
+    document.getElementById("bannerPreview").style.backgroundImage =
+        `url("${image}")`;
+});
+
+document.getElementById("profileName").addEventListener("input", updateProfilePreview);
+document.getElementById("profileDisplayName").addEventListener("input", updateProfilePreview);
+
+function updateProfilePreview() {
+    const displayName =
+        document.getElementById("profileDisplayName").value.trim() ||
+        document.getElementById("profileName").value.trim() ||
+        "Seu nome";
+
+    document.getElementById("profilePreviewName").textContent = displayName;
+}
+
+
+// ==========================================
+// ENVIO DE IMAGENS PARA O STORAGE
+// ==========================================
+
+async function uploadProfileImage(file, type) {
+    if (!file) return null;
+
+    if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_SIZE) {
+        throw new Error("Imagem inválida ou maior que 5 MB.");
+    }
+
+    const extension = file.type.split("/")[1].replace("jpeg", "jpg");
+
+    const imageRef = ref(
+        storage,
+        `profilePhotos/${currentUser.uid}/${type}.${extension}`
+    );
+
+    await uploadBytes(imageRef, file, {
+        contentType: file.type
+    });
+
+    return await getDownloadURL(imageRef);
+}
+
+
+// ==========================================
+// SALVAR PERFIL
+// ==========================================
 
 profileForm.addEventListener("submit", async (event) => {
-
     event.preventDefault();
 
-    if (!currentUser) return;
-
-    const saveButton = document.getElementById("saveProfile");
-
+    const button = document.getElementById("saveProfile");
     const feedback = document.getElementById("profileFeedback");
 
-    const name =
-        document.getElementById("profileDisplayName").value.trim();
-
-    const turma =
-        document.getElementById("profileClass").value.trim();
-
-    const description =
-        document.getElementById("profileDescription").value.trim();
-
-    if (!name) {
-
-        showFeedback(
-            feedback,
-            "Digite seu nome.",
-            false
-        );
-
-        return;
-
-    }
+    button.disabled = true;
+    button.textContent = "Salvando...";
 
     try {
+        let photoURL = currentProfile.photoURL || "";
+        let bannerURL = currentProfile.bannerURL || "";
 
-        saveButton.disabled = true;
+        if (photoInput.files[0]) {
+            showFeedback(feedback, "Enviando foto de perfil...", true);
+            photoURL = await uploadProfileImage(photoInput.files[0], "profile");
+        }
 
-        saveButton.textContent = "Salvando...";
+        if (bannerInput.files[0]) {
+            showFeedback(feedback, "Enviando banner...", true);
+            bannerURL = await uploadProfileImage(bannerInput.files[0], "banner");
+        }
 
-        const profileRef = doc(
-            db,
-            "profiles",
-            currentUser.uid
-        );
+        const name = document.getElementById("profileName").value.trim();
+        const displayName = document.getElementById("profileDisplayName").value.trim();
+
+        const instagram = document.getElementById("profileInstagram").value
+            .trim()
+            .replace(/^@/, "");
 
         const updatedProfile = {
-
             name,
-
-            email: currentUser.email || "",
-
-            photo: currentProfile?.photo ||
-                getDefaultPhoto(currentUser),
-
-            turma,
-
-            description,
-
-            role: normalizeRole(currentProfile?.role)
-
+            displayName,
+            email: currentUser.email,
+            photoURL,
+            bannerURL,
+            turma: document.getElementById("profileClass").value,
+            trilha: document.getElementById("profileTrack").value,
+            instagram,
+            description: document.getElementById("profileDescription").value.trim(),
+            updatedAt: serverTimestamp()
         };
 
-        await setDoc(profileRef, updatedProfile, {
-            merge: true
-        });
+        await setDoc(
+            doc(db, "profiles", currentUser.uid),
+            updatedProfile,
+            { merge: true }
+        );
 
         currentProfile = {
-
             ...currentProfile,
-
             ...updatedProfile
-
         };
 
-        updateProfileInterface();
+        photoInput.value = "";
+        bannerInput.value = "";
 
-        showFeedback(
-            feedback,
-            "Perfil atualizado com sucesso!"
-        );
+        updateHeader();
+        startCommunityListener();
 
-        await loadCommunity();
+        showFeedback(feedback, "Perfil atualizado com sucesso!", true);
 
     } catch (error) {
-
-        console.error("Erro ao salvar perfil:", error);
-
-        showFeedback(
-            feedback,
-            "Não foi possível salvar. Verifique sua conexão e as regras do Firebase.",
-            false
-        );
-
+        console.error(error);
+        showFeedback(feedback, error.message || "Não foi possível salvar o perfil.");
     } finally {
-
-        saveButton.disabled = false;
-
-        saveButton.textContent = "Salvar alterações";
-
+        button.disabled = false;
+        button.textContent = "Salvar perfil";
     }
-
 });
 
 
-/* ========================================
-   10. CARREGAR COMUNIDADE
-======================================== */
+// ==========================================
+// CABEÇALHO
+// ==========================================
 
-async function loadCommunity() {
+function updateHeader() {
+    const name = getDisplayName(currentProfile);
 
-    const communityGrid = document.getElementById("communityGrid");
-
-    communityGrid.innerHTML =
-        '<p class="empty-message">Carregando participantes...</p>';
-
-    try {
-
-        const profilesRef = collection(db, "profiles");
-
-        const snapshot = await getDocs(profilesRef);
-
-        communityUsers = [];
-
-        snapshot.forEach((documentSnapshot) => {
-
-            const data = documentSnapshot.data();
-
-            communityUsers.push({
-
-                id: documentSnapshot.id,
-
-                name: data.name || "Usuário",
-
-                photo: data.photo ||
-                    "https://placehold.co/120x120?text=User",
-
-                turma: data.turma || "",
-
-                description: data.description || "",
-
-                role: normalizeRole(data.role)
-
-            });
-
-        });
-
-        renderCommunity();
-
-    } catch (error) {
-
-        console.error("Erro ao carregar comunidade:", error);
-
-        communityGrid.innerHTML =
-            '<p class="empty-message">Não foi possível carregar a comunidade.</p>';
-
-    }
-
+    document.getElementById("headerUserName").textContent = name;
+    document.getElementById("welcomeName").textContent = name;
+    document.getElementById("headerUserPhoto").src = getPhoto(currentProfile);
 }
 
 
-/* ========================================
-   11. MOSTRAR PARTICIPANTES
-======================================== */
+// ==========================================
+// COMUNIDADE
+// ==========================================
+
+function startCommunityListener() {
+    if (unsubscribeProfiles) unsubscribeProfiles();
+
+    unsubscribeProfiles = onSnapshot(
+        collection(db, "profiles"),
+        (snapshot) => {
+            allProfiles = snapshot.docs
+                .map((item) => ({
+                    uid: item.id,
+                    ...item.data()
+                }))
+                .filter((profile) => profile.uid !== currentUser.uid);
+
+            renderCommunity();
+            updateMeetingOptions();
+        },
+        (error) => {
+            console.error("Erro na comunidade:", error);
+            document.getElementById("communityGrid").textContent =
+                "Não foi possível carregar a comunidade.";
+        }
+    );
+}
 
 function renderCommunity() {
-
-    const communityGrid = document.getElementById("communityGrid");
-
-    const search = document
-        .getElementById("searchPeople")
-        .value
+    const grid = document.getElementById("communityGrid");
+    const search = document.getElementById("searchPeople").value
         .trim()
         .toLowerCase();
 
-    communityGrid.innerHTML = "";
+    grid.replaceChildren();
 
-    const filteredUsers = communityUsers.filter((person) => {
+    const filtered = allProfiles.filter((profile) => {
+        const name = getDisplayName(profile).toLowerCase();
+        const turma = (profile.turma || "").toLowerCase();
+        const trilha = (profile.trilha || "").toLowerCase();
 
         const matchesSearch =
-            person.name.toLowerCase().includes(search) ||
-            person.turma.toLowerCase().includes(search);
+            name.includes(search) ||
+            turma.includes(search) ||
+            trilha.includes(search);
 
         const matchesFilter =
-            selectedFilter === "todos" ||
-            person.role === selectedFilter;
+            activeFilter === "todos" ||
+            profile.turma === activeFilter;
 
         return matchesSearch && matchesFilter;
-
     });
 
-    if (filteredUsers.length === 0) {
-
-        communityGrid.innerHTML =
-            '<p class="empty-message">Nenhuma pessoa encontrada.</p>';
-
+    if (!filtered.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "Nenhum participante encontrado.";
+        grid.appendChild(empty);
         return;
-
     }
 
-    filteredUsers.forEach((person) => {
-
+    filtered.forEach((profile) => {
         const card = document.createElement("article");
-
         card.className = "person-card";
 
-        const photo = document.createElement("img");
+        const banner = document.createElement("div");
+        banner.className = "person-banner";
 
-        photo.src = person.photo;
+        if (profile.bannerURL) {
+            banner.style.backgroundImage = `url("${profile.bannerURL}")`;
+        }
 
-        photo.alt = "Foto de " + person.name;
+        const content = document.createElement("div");
+        content.className = "person-content";
 
-        photo.referrerPolicy = "no-referrer";
+        const avatar = document.createElement("img");
+        avatar.className = "person-avatar";
+        avatar.src = getPhoto(profile);
+        avatar.alt = "Foto de " + getDisplayName(profile);
 
         const name = document.createElement("h3");
+        name.textContent = getDisplayName(profile);
 
-        name.textContent = person.name;
+        const meta = document.createElement("p");
+        meta.className = "person-meta";
+        meta.textContent =
+            `${profile.turma || "Turma não informada"} · ${profile.trilha || "Trilha não informada"}`;
 
         const description = document.createElement("p");
+        description.className = "person-description";
+        description.textContent = profile.description || "";
 
-        description.textContent =
-            person.description ||
-            "Ainda não adicionou uma descrição.";
+        content.append(avatar, name, meta, description);
 
-        const turma = document.createElement("p");
+        if (profile.instagram) {
+            const instagram = document.createElement("a");
+            instagram.className = "person-instagram";
+            instagram.textContent = "Instagram: @" + profile.instagram;
+            instagram.href =
+                "https://www.instagram.com/" +
+                encodeURIComponent(profile.instagram);
 
-        turma.textContent = person.turma
-            ? "Turma: " + person.turma
-            : "";
+            instagram.target = "_blank";
+            instagram.rel = "noopener noreferrer";
 
-        const role = document.createElement("span");
+            content.appendChild(instagram);
+        }
 
-        role.className = "person-role";
-
-        role.textContent = roleLabel(person.role);
-
-        card.appendChild(photo);
-
-        card.appendChild(name);
-
-        card.appendChild(description);
-
-        card.appendChild(turma);
-
-        card.appendChild(role);
-
-        communityGrid.appendChild(card);
-
+        card.append(banner, content);
+        grid.appendChild(card);
     });
-
 }
 
-
-/* ========================================
-   12. BUSCAR PARTICIPANTES
-======================================== */
-
-document
-    .getElementById("searchPeople")
-    .addEventListener("input", renderCommunity);
-
-
-/* ========================================
-   13. FILTRAR PARTICIPANTES
-======================================== */
+document.getElementById("searchPeople").addEventListener("input", renderCommunity);
 
 document.querySelectorAll(".filter-button").forEach((button) => {
-
     button.addEventListener("click", () => {
-
         document.querySelectorAll(".filter-button").forEach((item) => {
-
             item.classList.remove("active");
-
         });
 
         button.classList.add("active");
-
-        selectedFilter = button.dataset.filter;
-
+        activeFilter = button.dataset.filter;
         renderCommunity();
-
     });
-
 });
 
 
-/* ========================================
-   14. ENVIAR SUGESTÃO DE CONVERSA
-======================================== */
+// ==========================================
+// OPÇÕES DE CONVERSA
+// ==========================================
 
-const meetingForm = document.getElementById("meetingForm");
+function updateMeetingOptions() {
+    const select = document.getElementById("meetingPerson");
+    const selected = select.value;
 
-meetingForm.addEventListener("submit", async (event) => {
+    select.replaceChildren();
 
-    event.preventDefault();
+    const firstOption = document.createElement("option");
+    firstOption.value = "";
+    firstOption.textContent = "Selecione uma pessoa";
+    select.appendChild(firstOption);
 
-    if (!currentUser) return;
-
-    const feedback = document.getElementById("meetingFeedback");
-
-    const person =
-        document.getElementById("meetingPerson").value.trim();
-
-    const date =
-        document.getElementById("meetingDate").value;
-
-    const time =
-        document.getElementById("meetingTime").value;
-
-    const message =
-        document.getElementById("meetingMessage").value.trim();
-
-    if (!person || !date || !time) {
-
-        showFeedback(
-            feedback,
-            "Preencha os campos obrigatórios.",
-            false
-        );
-
-        return;
-
-    }
-
-    const selectedDate = new Date(date + "T" + time);
-
-    if (selectedDate <= new Date()) {
-
-        showFeedback(
-            feedback,
-            "Escolha uma data e horário futuros.",
-            false
-        );
-
-        return;
-
-    }
-
-    const submitButton = meetingForm.querySelector(
-        'button[type="submit"]'
-    );
-
-    try {
-
-        submitButton.disabled = true;
-
-        submitButton.textContent = "Enviando...";
-
-        await addDoc(collection(db, "meetingRequests"), {
-
-            usuarioId: currentUser.uid,
-
-            usuarioNome:
-                currentProfile?.name ||
-                currentUser.email ||
-                "Usuário",
-
-            convidado: person,
-
-            data: date,
-
-            horario: time,
-
-            mensagem: message,
-
-            status: "pendente",
-
-            criadoEm: serverTimestamp()
-
-        });
-
-        meetingForm.reset();
-
-        showFeedback(
-            feedback,
-            "Sua sugestão foi enviada com sucesso!"
-        );
-
-    } catch (error) {
-
-        console.error("Erro ao enviar sugestão:", error);
-
-        showFeedback(
-            feedback,
-            "Não foi possível enviar sua sugestão. Tente novamente.",
-            false
-        );
-
-    } finally {
-
-        submitButton.disabled = false;
-
-        submitButton.textContent = "Enviar sugestão →";
-
-    }
-
-});
-
-
-/* ========================================
-   15. DATA MÍNIMA DO FORMULÁRIO
-======================================== */
-
-const meetingDateInput = document.getElementById("meetingDate");
-
-const today = new Date();
-
-const localDate =
-    today.getFullYear() + "-" +
-    String(today.getMonth() + 1).padStart(2, "0") + "-" +
-    String(today.getDate()).padStart(2, "0");
-
-meetingDateInput.min = localDate;
-
-
-/* ========================================
-   16. ROLETA
-======================================== */
-
-const spinButton = document.getElementById("spinButton");
-
-const rouletteVisual = document.getElementById("rouletteVisual");
-
-const rouletteResult = document.getElementById("rouletteResult");
-
-let spinning = false;
-
-spinButton.addEventListener("click", () => {
-
-    if (spinning) return;
-
-    const possibleUsers = communityUsers.filter((person) => {
-
-        return person.id !== currentUser?.uid;
-
+    allProfiles.forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.uid;
+        option.textContent = getDisplayName(profile);
+        select.appendChild(option);
     });
 
-    if (possibleUsers.length === 0) {
-
-        rouletteResult.textContent =
-            "Ainda não existem participantes suficientes.";
-
-        return;
-
-    }
-
-    spinning = true;
-
-    spinButton.disabled = true;
-
-    spinButton.textContent = "Sorteando...";
-
-    rouletteResult.textContent = "A roleta está girando...";
-
-    rouletteVisual.classList.add("spinning");
-
-    const winner =
-        possibleUsers[
-            Math.floor(Math.random() * possibleUsers.length)
-        ];
-
-    setTimeout(() => {
-
-        rouletteVisual.classList.remove("spinning");
-
-        rouletteResult.textContent =
-            "🥑 " + winner.name +
-            " pode ser o próximo convidado!";
-
-        spinning = false;
-
-        spinButton.disabled = false;
-
-        spinButton.textContent = "Girar novamente!";
-
-    }, 2500);
-
-});
-
-
-/* ========================================
-   17. NAVEGAÇÃO ENTRE PÁGINAS
-======================================== */
-
-function navigateTo(pageName) {
-
-    const pages = document.querySelectorAll(".page");
-
-    const navigationItems = document.querySelectorAll(".nav-item");
-
-    pages.forEach((page) => {
-
-        page.classList.remove("active");
-
-    });
-
-    navigationItems.forEach((item) => {
-
-        item.classList.remove("active");
-
-    });
-
-    const selectedPage = document.getElementById(pageName);
-
-    if (!selectedPage) return;
-
-    selectedPage.classList.add("active");
-
-    const selectedButton = document.querySelector(
-        `.nav-item[data-page="${pageName}"]`
-    );
-
-    if (selectedButton) {
-
-        selectedButton.classList.add("active");
-
-    }
-
-    const titles = {
-
-        home: "Início",
-
-        community: "Comunidade",
-
-        meetings: "Conversas",
-
-        roulette: "Roleta",
-
-        profile: "Meu perfil"
-
-    };
-
-    document.getElementById("pageTitle").textContent =
-        titles[pageName] || "aBAChat";
-
-    window.scrollTo({
-
-        top: 0,
-
-        behavior: "smooth"
-
-    });
-
+    select.value = selected;
 }
 
 
-// Menu lateral
+// ==========================================
+// ENVIAR SUGESTÃO DE CONVERSA
+// ==========================================
+
+meetingForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const feedback = document.getElementById("meetingFeedback");
+
+    try {
+        const personId = document.getElementById("meetingPerson").value;
+        const person = allProfiles.find((item) => item.uid === personId);
+
+        if (!person) {
+            showFeedback(feedback, "Selecione um participante válido.");
+            return;
+        }
+
+        await addDoc(collection(db, "meetingRequests"), {
+            senderId: currentUser.uid,
+            senderName: getDisplayName(currentProfile),
+            recipientId: personId,
+            recipientName: getDisplayName(person),
+            date: document.getElementById("meetingDate").value,
+            time: document.getElementById("meetingTime").value,
+            message: document.getElementById("meetingMessage").value.trim(),
+            createdAt: serverTimestamp()
+        });
+
+        meetingForm.reset();
+        showFeedback(feedback, "Sugestão enviada com sucesso!", true);
+
+    } catch (error) {
+        console.error(error);
+        showFeedback(feedback, "Não foi possível enviar a sugestão.");
+    }
+});
+
+
+// ==========================================
+// ROLETA
+// ==========================================
+
+document.getElementById("spinButton").addEventListener("click", () => {
+    const result = document.getElementById("rouletteResult");
+    const visual = document.getElementById("rouletteVisual");
+    const button = document.getElementById("spinButton");
+
+    if (!allProfiles.length) {
+        result.textContent = "Ainda não existem participantes suficientes.";
+        return;
+    }
+
+    button.disabled = true;
+    result.textContent = "Sorteando...";
+    visual.style.transform = "rotate(720deg)";
+    visual.style.transition = "transform 1.2s ease";
+
+    setTimeout(() => {
+        const chosen = allProfiles[
+            Math.floor(Math.random() * allProfiles.length)
+        ];
+
+        result.textContent = "Próximo convidado: " + getDisplayName(chosen);
+        visual.style.transform = "rotate(0deg)";
+        button.disabled = false;
+    }, 1200);
+});
+
+
+// ==========================================
+// CANAL OFICIAL
+// ==========================================
+
+function startChannelListener() {
+    if (unsubscribeMessages) unsubscribeMessages();
+
+    const messagesQuery = query(
+        collection(db, "channelMessages"),
+        orderBy("createdAt", "desc"),
+        limit(50)
+    );
+
+    unsubscribeMessages = onSnapshot(
+        messagesQuery,
+        (snapshot) => {
+            const messages = snapshot.docs.map((item) => ({
+                id: item.id,
+                ...item.data()
+            }));
+
+            renderChannelMessages(messages.reverse());
+        },
+        (error) => {
+            console.error("Erro no canal:", error);
+            document.getElementById("channelMessages").textContent =
+                "Não foi possível carregar as mensagens do canal.";
+        }
+    );
+
+    const isAdmin =
+        currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+    channelForm.classList.toggle("hidden", !isAdmin);
+}
+
+function renderChannelMessages(messages) {
+    const container = document.getElementById("channelMessages");
+    container.replaceChildren();
+
+    if (!messages.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "Ainda não há comunicados publicados.";
+        container.appendChild(empty);
+        return;
+    }
+
+    messages.forEach((message) => {
+        const article = document.createElement("article");
+        article.className = "channel-message";
+
+        const avatar = document.createElement("img");
+        avatar.src = message.senderPhoto || DEFAULT_PHOTO;
+        avatar.alt = "";
+
+        const body = document.createElement("div");
+        body.className = "channel-message-body";
+
+        const top = document.createElement("div");
+        top.className = "channel-message-top";
+
+        const author = document.createElement("strong");
+        author.textContent = message.senderName || "Participante";
+
+        const date = document.createElement("time");
+        date.textContent = formatDate(message.createdAt);
+
+        const text = document.createElement("p");
+        text.textContent = message.text || "";
+
+        top.append(author, date);
+        body.append(top, text);
+        article.append(avatar, body);
+
+        container.appendChild(article);
+    });
+}
+
+channelForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const feedback = document.getElementById("channelFeedback");
+    const input = document.getElementById("channelMessageInput");
+    const button = channelForm.querySelector("button");
+
+    const isAdmin =
+        currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+    if (!isAdmin) {
+        showFeedback(feedback, "Você não tem permissão para publicar.");
+        return;
+    }
+
+    const message = input.value.trim();
+
+    if (!message) {
+        showFeedback(feedback, "Escreva uma mensagem antes de publicar.");
+        return;
+    }
+
+    button.disabled = true;
+
+    try {
+        await addDoc(collection(db, "channelMessages"), {
+            senderId: currentUser.uid,
+            senderName: getDisplayName(currentProfile),
+            senderPhoto: getPhoto(currentProfile),
+            text: message,
+            createdAt: serverTimestamp()
+        });
+
+        input.value = "";
+        showFeedback(feedback, "Mensagem publicada!", true);
+
+    } catch (error) {
+        console.error(error);
+        showFeedback(feedback, "Não foi possível publicar a mensagem.");
+    } finally {
+        button.disabled = false;
+    }
+});
+
+
+// ==========================================
+// NAVEGAÇÃO
+// ==========================================
+
+function navigateTo(page) {
+    const pages = {
+        home: "Início",
+        community: "Comunidade",
+        meetings: "Conversas",
+        roulette: "Roleta",
+        channel: "Canal oficial",
+        profile: "Meu perfil"
+    };
+
+    if (!pages[page]) return;
+
+    document.querySelectorAll(".page").forEach((item) => {
+        item.classList.remove("active");
+    });
+
+    document.getElementById(page + "Page").classList.add("active");
+
+    document.querySelectorAll(".nav-item").forEach((item) => {
+        item.classList.toggle("active", item.dataset.page === page);
+    });
+
+    document.getElementById("pageTitle").textContent = pages[page];
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
 
 document.querySelectorAll(".nav-item").forEach((button) => {
-
     button.addEventListener("click", () => {
-
         navigateTo(button.dataset.page);
-
     });
-
 });
-
-
-// Botões de navegação dos cartões
 
 document.querySelectorAll("[data-go]").forEach((button) => {
-
     button.addEventListener("click", () => {
-
         navigateTo(button.dataset.go);
-
     });
-
 });
 
 
-/* ========================================
-   18. FINALIZAÇÃO
-======================================== */
+// ==========================================
+// SAIR
+// ==========================================
 
-console.log("🥑 aBAChat iniciado!");
-
+document.getElementById("logoutButton").addEventListener("click", async () => {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error(error);
+        alert("Não foi possível sair da conta.");
+    }
+});
