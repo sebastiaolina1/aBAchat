@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#315b32">
+
+    <title>aBAChat | Behring Academy</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- TELA DE LOGIN -->
+    <section id="loginScreen" class="login-screen">
+        <div class="login-card">
+
+            <div class="brand">
+                <div class="brand-icon">🥑</div>
+                <h1>aBA<span>Chat</span></h1>
+            </div>
+
+            <p class="login-subtitle">
+                A Behring Academy Chat
+            </p>
+
+            <div class="login-decoration">
+                <div class="avocado">🥑</div>
+            </div>
+
+            <h2>Conexões que geram conhecimento.</h2>
+
+            <p class="login-description">
+                Um espaço para conhecer pessoas, compartilhar experiências
+                e fortalecer a comunidade Behring Academy.
+            </p>
+
+            <button id="googleLogin" class="google-button">
+                <span>G</span>
+                Entrar com Google
+            </button>
+
+            <p id="loginFeedback" class="feedback"></p>
+
+            <div class="login-footer">
+                Uma iniciativa da comunidade Behring Academy
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- APLICAÇÃO -->
+    <div id="appScreen" class="app-screen hidden">
+
+        <!-- MENU LATERAL -->
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+                <div class="brand-icon small">🥑</div>
+                <h2>aBA<span>Chat</span></h2>
+            </div>
+
+            <div class="sidebar-label">MENU PRINCIPAL</div>
+
+            <nav class="navigation">
+
+                <button class="nav-item active" data-page="home">
+                    <span>⌂</span>
+                    Início
+                </button>
+
+                <button class="nav-item" data-page="community">
+                    <span>♧</span>
+                    Comunidade
+                </button>
+
+                <button class="nav-item" data-page="meetings">
+                    <span>▣</span>
+                    Conversas
+                </button>
+
+                <button class="nav-item" data-page="roulette">
+                    <span>◉</span>
+                    Roleta
+                </button>
+
+                <button class="nav-item" data-page="profile">
+                    <span>♙</span>
+                    Meu perfil
+                </button>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-message">
+                    <span>🥑</span>
+                    <p>Conhecimento cresce quando é compartilhado.</p>
+                </div>
+
+                <button id="logoutButton" class="logout-button">
+                    ↪ Sair da conta
+                </button>
+            </div>
+
+        </aside>
+
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="main-content">
+
+            <!-- CABEÇALHO -->
+            <header class="topbar">
+
+                <div>
+                    <p class="topbar-label">BEHRING ACADEMY</p>
+                    <h2 id="pageTitle">Início</h2>
+                </div>
+
+                <div class="user-area">
+                    <div class="user-info">
+                        <strong id="headerUserName">Usuário</strong>
+                        <span>Comunidade aBAChat</span>
+                    </div>
+
+                    <img
+                        id="headerUserPhoto"
+                        class="user-photo"
+                        src="https://placehold.co/100x100?text=User"
+                        alt="Foto do usuário"
+                    >
+                </div>
+
+            </header>
+
+
+            <!-- PÁGINA INICIAL -->
+            <section id="home" class="page active">
+
+                <div class="welcome-banner">
+                    <div>
+                        <span class="welcome-tag">🥑 BEM-VINDO AO aBACHAT</span>
+
+                        <h1>Olá, <span id="welcomeName">estudante</span>!</h1>
+
+                        <p>
+                            Novas conexões, experiências e aprendizados
+                            começam com uma conversa.
+                        </p>
+
+                        <button class="primary-button" data-go="community">
+                            Explorar comunidade →
+                        </button>
+                    </div>
+
+                    <div class="welcome-illustration">🥑</div>
+                </div>
+
+
+                <div class="section-heading">
+                    <div>
+                        <h2>Seu espaço na comunidade</h2>
+                        <p>O que você gostaria de fazer hoje?</p>
+                    </div>
+                </div>
+
+
+                <div class="dashboard-grid">
+
+                    <div class="dashboard-card" data-go="community">
+                        <div class="card-icon">♧</div>
+                        <h3>Comunidade</h3>
+                        <p>Conheça alunos, professores e mentores.</p>
+                        <span>Explorar →</span>
+                    </div>
+
+                    <div class="dashboard-card" data-go="meetings">
+                        <div class="card-icon">▣</div>
+                        <h3>Conversas</h3>
+                        <p>Envie sugestões de pessoas para conversar.</p>
+                        <span>Participar →</span>
+                    </div>
+
+                    <div class="dashboard-card" data-go="roulette">
+                        <div class="card-icon">◉</div>
+                        <h3>Roleta</h3>
+                        <p>Descubra quem pode ser o próximo convidado.</p>
+                        <span>Girar roleta →</span>
+                    </div>
+
+                    <div class="dashboard-card" data-go="profile">
+                        <div class="card-icon">♙</div>
+                        <h3>Meu perfil</h3>
+                        <p>Apresente-se para a comunidade.</p>
+                        <span>Editar perfil →</span>
+                    </div>
+
+                </div>
+
+
+                <div class="about-card">
+                    <div class="about-icon">🥑</div>
+
+                    <div>
+                        <span class="welcome-tag">SOBRE O PROJETO</span>
+
+                        <h2>Uma comunidade feita de conexões.</h2>
+
+                        <p>
+                            O aBAChat é uma iniciativa idealizada por
+                            Glenderson e Guilherme, alunos da turma Nexus,
+                            com o objetivo de aproximar pessoas da Behring
+                            Academy por meio de conversas e troca de experiências.
+                        </p>
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- COMUNIDADE -->
+            <section id="community" class="page">
+
+                <div class="page-intro">
+                    <h1>Comunidade</h1>
+                    <p>Conheça as pessoas que fazem parte da Behring Academy.</p>
+                </div>
+
+                <div class="community-tools">
+
+                    <input
+                        type="search"
+                        id="searchPeople"
+                        placeholder="Buscar pessoas..."
+                    >
+
+                    <div class="filter-buttons">
+                        <button class="filter-button active" data-filter="todos">Todos</button>
+                        <button class="filter-button" data-filter="aluno">Alunos</button>
+                        <button class="filter-button" data-filter="mentor">Mentores</button>
+                        <button class="filter-button" data-filter="professor">Professores</button>
+                    </div>
+
+                </div>
+
+                <div id="communityGrid" class="community-grid">
+                    <p class="empty-message">Carregando comunidade...</p>
+                </div>
+
+            </section>
+
+
+            <!-- CONVERSAS -->
+            <section id="meetings" class="page">
+
+                <div class="page-intro">
+                    <h1>Conversas</h1>
+                    <p>Indique alguém que você gostaria de conhecer.</p>
+                </div>
+
+                <div class="content-card">
+
+                    <div class="form-heading">
+                        <div class="card-icon">▣</div>
+                        <div>
+                            <h2>Sugerir uma conversa</h2>
+                            <p>Compartilhe sua sugestão com os idealizadores.</p>
+                        </div>
+                    </div>
+
+                    <form id="meetingForm">
+
+                        <label for="meetingPerson">Quem você gostaria de conhecer?</label>
+                        <input
+                            type="text"
+                            id="meetingPerson"
+                            placeholder="Nome da pessoa"
+                            required
+                        >
+
+                        <label for="meetingDate">Data sugerida</label>
+                        <input
+                            type="date"
+                            id="meetingDate"
+                            required
+                        >
+
+                        <label for="meetingTime">Horário sugerido</label>
+                        <input
+                            type="time"
+                            id="meetingTime"
+                            required
+                        >
+
+                        <label for="meetingMessage">Por que gostaria de conversar com essa pessoa?</label>
+                        <textarea
+                            id="meetingMessage"
+                            rows="4"
+                            placeholder="Conte um pouco sobre sua sugestão..."
+                        ></textarea>
+
+                        <button type="submit" class="primary-button">
+                            Enviar sugestão →
+                        </button>
+
+                        <p id="meetingFeedback" class="feedback"></p>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <!-- ROLETA -->
+            <section id="roulette" class="page">
+
+                <div class="page-intro">
+                    <h1>Roleta aBAChat</h1>
+                    <p>Uma surpresa pode ser o começo de uma grande conexão.</p>
+                </div>
+
+                <div class="roulette-card">
+
+                    <div class="roulette-description">
+                        <span class="welcome-tag">🥑 QUEM SERÁ O PRÓXIMO?</span>
+
+                        <h2>Vamos descobrir?</h2>
+
+                        <p>
+                            Gire a roleta e descubra uma pessoa da comunidade
+                            para uma possível conversa.
+                        </p>
+                    </div>
+
+                    <div id="rouletteVisual" class="roulette-visual">
+                        <span>🥑</span>
+                    </div>
+
+                    <h2 id="rouletteResult" class="roulette-result">
+                        Aguardando o sorteio...
+                    </h2>
+
+                    <button id="spinButton" class="primary-button">
+                        Girar roleta!
+                    </button>
+
+                    <p class="roulette-note">
+                        O sorteio é uma sugestão de convidado, não uma confirmação de participação.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- PERFIL -->
+            <section id="profile" class="page">
+
+                <div class="page-intro">
+                    <h1>Meu perfil</h1>
+                    <p>Conte um pouco sobre você.</p>
+                </div>
+
+                <div class="content-card profile-card">
+
+                    <div class="profile-header">
+                        <img
+                            id="profilePhoto"
+                            src="https://placehold.co/120x120?text=User"
+                            alt="Foto do perfil"
+                        >
+
+                        <div>
+                            <h2 id="profileName">Seu nome</h2>
+                            <p id="profileEmail">seuemail@email.com</p>
+                        </div>
+                    </div>
+
+                    <form id="profileForm">
+
+                        <label for="profileDisplayName">Nome de exibição</label>
+                        <input
+                            type="text"
+                            id="profileDisplayName"
+                            placeholder="Como deseja ser chamado?"
+                            required
+                        >
+
+                        <label for="profileClass">Turma</label>
+                        <input
+                            type="text"
+                            id="profileClass"
+                            placeholder="Ex.: Nexus"
+                        >
+
+                        <label for="profileDescription">Sobre você</label>
+                        <textarea
+                            id="profileDescription"
+                            rows="5"
+                            placeholder="Fale sobre seus interesses, conquistas e objetivos..."
+                        ></textarea>
+
+                        <button type="submit" id="saveProfile" class="primary-button">
+                            Salvar alterações
+                        </button>
+
+                        <p id="profileFeedback" class="feedback"></p>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <footer class="app-footer">
+                <span>🥑 aBAChat</span>
+                <p>Uma iniciativa da comunidade Behring Academy.</p>
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
