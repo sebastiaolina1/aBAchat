@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10152d">
+
+    <title>aBAchat | Behring Academy</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- MENU LATERAL -->
+    <aside class="sidebar">
+
+        <a class="brand" href="#">
+            <div class="brand-mark">a<span>BA</span></div>
+
+            <div class="brand-name">
+                aBAchat
+                <small>Behring Academy</small>
+            </div>
+        </a>
+
+        <div class="profile-mini">
+            <div class="avatar avatar-you">GS</div>
+
+            <div>
+                <strong id="sideName">Guilherme</strong>
+                <small>Aluno da BA</small>
+            </div>
+
+            <span class="online-dot"></span>
+        </div>
+
+        <nav>
+
+            <button class="nav-link active" data-page="home">
+                <span>⌂</span>
+                Início
+            </button>
+
+            <button class="nav-link" data-page="discover">
+                <span>◎</span>
+                Descobrir alunos
+            </button>
+
+            <button class="nav-link" data-page="schedule">
+                <span>▦</span>
+                Agendamentos
+                <i id="scheduleCount">0</i>
+            </button>
+
+            <button class="nav-link" data-page="messages">
+                <span>▤</span>
+                Conversas
+            </button>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-note">
+                <span>✦</span>
+                <p>
+                    Ideias crescem quando são compartilhadas.
+                </p>
+            </div>
+
+            <button class="nav-link" data-page="profile">
+                <span>⚙</span>
+                Meu perfil
+            </button>
+
+        </div>
+
+        <div class="sidebar-footer">
+            Uma comunidade de alunos BA<br>
+            © 2026 aBAchat
+        </div>
+
+    </aside>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="mobile-brand">
+                a<span>BA</span>chat
+            </div>
+
+            <div class="crumb">
+                Comunidade <span>/</span>
+                <b id="pageTitle">Início</b>
+            </div>
+
+            <div class="top-actions">
+
+                <button class="icon-btn" id="notificationsBtn">
+                    ♧
+                </button>
+
+                <div class="avatar avatar-you small-avatar">
+                    GS
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- INÍCIO -->
+        <section class="page active" id="page-home">
+
+            <div class="welcome">
+
+                <div>
+
+                    <div class="eyebrow">
+                        SUA COMUNIDADE, SUAS CONEXÕES
+                    </div>
+
+                    <h1>
+                        Boas-vindas ao
+                        <span>aBAchat.</span>
+                    </h1>
+
+                    <p>
+                        Conheça outros alunos, compartilhe ideias
+                        e marque uma conversa por vídeo.
+                    </p>
+
+                    <button class="primary-btn" data-go="discover">
+                        Encontrar alunos <span>→</span>
+                    </button>
+
+                </div>
+
+                <div class="welcome-art">
+
+                    <div class="orbit orbit-one"></div>
+                    <div class="orbit orbit-two"></div>
+
+                    <div class="art-center">
+                        a<span>BA</span>
+                    </div>
+
+                    <div class="bubble bubble-one">✦</div>
+                    <div class="bubble bubble-two">•••</div>
+                    <div class="bubble bubble-three">↗</div>
+
+                </div>
+
+            </div>
+
+
+            <div class="section-heading">
+
+                <div>
+                    <div class="eyebrow">VISÃO GERAL</div>
+                    <h2>Sua comunidade</h2>
+                </div>
+
+                <span class="muted">
+                    Feita para aproximar talentos
+                </span>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon purple">◎</div>
+
+                    <div>
+                        <strong>120+</strong>
+                        <span>Alunos na comunidade</span>
+                    </div>
+
+                    <small>Exemplo</small>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon blue">▦</div>
+
+                    <div>
+                        <strong id="homeMeetings">0</strong>
+                        <span>Conversas agendadas</span>
+                    </div>
+
+                    <small>Suas</small>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon orange">✦</div>
+
+                    <div>
+                        <strong>24</strong>
+                        <span>Áreas de interesse</span>
+                    </div>
+
+                    <small>Explore</small>
+
+                </article>
+
+            </div>
+
+
+            <div class="content-grid">
+
+                <section class="panel">
+
+                    <div class="panel-head">
+
+                        <div>
+                            <div class="eyebrow">PESSOAS</div>
+                            <h3>Alunos para conhecer</h3>
+                        </div>
+
+                        <button class="text-btn" data-go="discover">
+                            Ver todos →
+                        </button>
+
+                    </div>
+
+                    <div id="suggestedUsers" class="user-list"></div>
+
+                </section>
+
+
+                <section class="panel upcoming">
+
+                    <div class="panel-head">
+
+                        <div>
+                            <div class="eyebrow">AGENDA</div>
+                            <h3>Próximas conversas</h3>
+                        </div>
+
+                        <button class="text-btn" data-go="schedule">
+                            Ver agenda →
+                        </button>
+
+                    </div>
+
+                    <div id="homeSchedule" class="empty-state">
+
+                        <div class="empty-icon">▦</div>
+
+                        <strong>
+                            Nenhuma conversa marcada
+                        </strong>
+
+                        <p>
+                            Convide alguém para uma conversa
+                            e troque experiências.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- DESCOBRIR ALUNOS -->
+        <section class="page" id="page-discover">
+
+            <div class="page-intro">
+
+                <div class="eyebrow">
+                    AMPLIE SEU CÍRCULO
+                </div>
+
+                <h1>Descobrir alunos</h1>
+
+                <p>
+                    Encontre pessoas da Behring Academy
+                    com interesses parecidos com os seus.
+                </p>
+
+            </div>
+
+
+            <div class="search-row">
+
+                <label class="search-box">
+
+                    <span>⌕</span>
+
+                    <input
+                        id="searchInput"
+                        placeholder="Buscar por nome, área ou interesse..."
+                    >
+
+                </label>
+
+
+                <select id="interestFilter">
+
+                    <option value="">Todas as áreas</option>
+
+                    <option>Programação</option>
+                    <option>Matemática</option>
+                    <option>Robótica</option>
+                    <option>Ciências</option>
+                    <option>Empreendedorismo</option>
+
+                </select>
+
+            </div>
+
+
+            <div id="allUsers" class="people-grid"></div>
+
+        </section>
+
+
+        <!-- AGENDAMENTOS -->
+        <section class="page" id="page-schedule">
+
+            <div class="page-intro">
+
+                <div class="eyebrow">
+                    SEUS ENCONTROS
+                </div>
+
+                <h1>Agendamentos</h1>
+
+                <p>
+                    Organize suas conversas com outros alunos.
+                </p>
+
+            </div>
+
+            <div id="scheduleList" class="schedule-list"></div>
+
+        </section>
+
+
+        <!-- CONVERSAS -->
+        <section class="page" id="page-messages">
+
+            <div class="page-intro">
+
+                <div class="eyebrow">
+                    TROQUE IDEIAS
+                </div>
+
+                <h1>Conversas</h1>
+
+                <p>
+                    Suas conexões começam com uma boa conversa.
+                </p>
+
+            </div>
+
+
+            <div class="panel message-panel">
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">✉</div>
+
+                    <strong>
+                        Suas conversas aparecerão aqui
+                    </strong>
+
+                    <p>
+                        Visite Descobrir alunos e convide
+                        alguém para conversar.
+                    </p>
+
+                    <button class="primary-btn" data-go="discover">
+                        Encontrar alguém
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PERFIL -->
+        <section class="page" id="page-profile">
+
+            <div class="page-intro">
+
+                <div class="eyebrow">
+                    SUA IDENTIDADE NA COMUNIDADE
+                </div>
+
+                <h1>Meu perfil</h1>
+
+                <p>
+                    Conte um pouco sobre você para que
+                    outros alunos possam te conhecer.
+                </p>
+
+            </div>
+
+
+            <form class="panel profile-form" id="profileForm">
+
+                <label>
+                    Nome de exibição
+
+                    <input
+                        id="profileName"
+                        value="Guilherme"
+                        maxlength="40"
+                        required
+                    >
+                </label>
+
+
+                <label>
+                    Apresentação
+
+                    <textarea
+                        id="profileBio"
+                        rows="3"
+                        maxlength="180"
+                        placeholder="O que você gosta de estudar?"
+                    ></textarea>
+
+                </label>
+
+
+                <label>
+                    Principal interesse
+
+                    <select id="profileInterest">
+
+                        <option>Programação</option>
+                        <option>Matemática</option>
+                        <option>Robótica</option>
+                        <option>Ciências</option>
+                        <option>Empreendedorismo</option>
+
+                    </select>
+
+                </label>
+
+
+                <button class="primary-btn" type="submit">
+                    Salvar perfil
+                </button>
+
+                <p class="form-hint">
+                    Demonstração: os dados ficam salvos
+                    apenas neste navegador.
+                </p>
+
+            </form>
+
+        </section>
+
+
+        <footer class="main-footer">
+
+            aBAchat
+            <span>•</span>
+            Conexões que inspiram novas ideias.
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- MODAL DE AGENDAMENTO -->
+<div class="modal-backdrop" id="modalBackdrop">
+
+    <div class="modal" role="dialog" aria-modal="true">
+
+        <button class="modal-close" id="closeModal">
+            ×
+        </button>
+
+        <div class="eyebrow">
+            MARQUE UM ENCONTRO
+        </div>
+
+        <h2 id="modalTitle">
+            Agendar conversa
+        </h2>
+
+        <p id="modalDescription" class="muted">
+            Escolha um horário para conversar com este aluno.
+        </p>
+
+
+        <form id="bookingForm">
+
+            <input type="hidden" id="bookingUser">
+
+
+            <label>
+                Data
+
+                <input
+                    type="date"
+                    id="bookingDate"
+                    required
+                >
+            </label>
+
+
+            <label>
+                Horário
+
+                <input
+                    type="time"
+                    id="bookingTime"
+                    required
+                >
+            </label>
+
+
+            <label>
+                Assunto
+
+                <select id="bookingTopic">
+
+                    <option>
+                        Conhecer e trocar experiências
+                    </option>
+
+                    <option>
+                        Programação e OBI
+                    </option>
+
+                    <option>
+                        Matemática e olimpíadas
+                    </option>
+
+                    <option>
+                        Projetos e tecnologia
+                    </option>
+
+                    <option>
+                        Outro assunto
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <button class="primary-btn full-btn" type="submit">
+                Confirmar agendamento
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- NOTIFICAÇÕES -->
+<div class="toast" id="toast"></div>
+
+
+<!-- JAVASCRIPT -->
+<script src="app.js"></script>
+
+</body>
+</html>
