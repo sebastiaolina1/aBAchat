@@ -33,14 +33,17 @@ import {
 // Substitua os valores abaixo pelos dados
 // do seu projeto Firebase.
 
+
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJECT_ID",
-    storageBucket: "SEU_PROJETO.firebasestorage.app",
-    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-    appId: "SEU_APP_ID"
+    apiKey: "AIzaSyBUE-a-pftJTQCUmcTvKRzMDOMooNlVvk0",
+    authDomain: "abachat-ff4ab.firebaseapp.com",
+    projectId: "abachat-ff4ab",
+    storageBucket: "abachat-ff4ab.firebasestorage.app",
+    messagingSenderId: "289768997594",
+    appId: "1:289768997594:web:613674940a238602f3dbe3",
+    measurementId: "G-E5G9EQXREZ"
 };
+
 
 
 // Inicialização
