@@ -8,8 +8,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 
 import {
     getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -30,10 +30,6 @@ import {
    1. CONFIGURAÇÃO DO FIREBASE
 ======================================== */
 
-// Substitua os valores abaixo pelos dados
-// do seu projeto Firebase.
-
-
 const firebaseConfig = {
     apiKey: "AIzaSyBUE-a-pftJTQCUmcTvKRzMDOMooNlVvk0",
     authDomain: "abachat-ff4ab.firebaseapp.com",
@@ -45,7 +41,6 @@ const firebaseConfig = {
 };
 
 
-
 // Inicialização
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -53,12 +48,6 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 
 const db = getFirestore(firebaseApp);
-
-const googleProvider = new GoogleAuthProvider();
-
-googleProvider.setCustomParameters({
-    prompt: "select_account"
-});
 
 
 /* ========================================
@@ -68,10 +57,19 @@ googleProvider.setCustomParameters({
 const loginScreen = document.getElementById("loginScreen");
 const appScreen = document.getElementById("appScreen");
 
-const googleLogin = document.getElementById("googleLogin");
 const logoutButton = document.getElementById("logoutButton");
 
 const loginFeedback = document.getElementById("loginFeedback");
+
+const emailLoginForm = document.getElementById("emailLoginForm");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const loginSubmit = document.getElementById("loginSubmit");
+
+const toggleAuthMode = document.getElementById("toggleAuthMode");
+const loginModeText = document.getElementById("loginModeText");
+
+let isRegistering = false;
 
 let currentUser = null;
 let currentProfile = null;
@@ -84,27 +82,43 @@ let selectedFilter = "todos";
 ======================================== */
 
 function showFeedback(element, message, success = true) {
+
     if (!element) return;
 
     element.textContent = message;
-    element.style.color = success ? "#527d3c" : "#c0392b";
+
+    element.style.color = success
+        ? "#527d3c"
+        : "#c0392b";
+
 }
 
 
 function getDefaultPhoto(user) {
+
     return user?.photoURL ||
         "https://placehold.co/120x120?text=User";
+
 }
 
 
 function normalizeRole(role) {
-    const allowedRoles = ["aluno", "mentor", "professor"];
 
-    return allowedRoles.includes(role) ? role : "aluno";
+    const allowedRoles = [
+        "aluno",
+        "mentor",
+        "professor"
+    ];
+
+    return allowedRoles.includes(role)
+        ? role
+        : "aluno";
+
 }
 
 
 function roleLabel(role) {
+
     const labels = {
         aluno: "Aluno",
         mentor: "Mentor",
@@ -112,45 +126,139 @@ function roleLabel(role) {
     };
 
     return labels[normalizeRole(role)];
+
 }
 
 
 /* ========================================
-   4. LOGIN COM GOOGLE
+   4. LOGIN E CADASTRO
+   COM E-MAIL E SENHA
 ======================================== */
 
-googleLogin.addEventListener("click", async () => {
+// Alternar entre login e cadastro
+
+toggleAuthMode.addEventListener("click", () => {
+
+    isRegistering = !isRegistering;
+
+    loginModeText.textContent = isRegistering
+        ? "Crie sua conta no aBAChat"
+        : "Entre na sua conta";
+
+    loginSubmit.textContent = isRegistering
+        ? "Criar conta"
+        : "Entrar";
+
+    toggleAuthMode.textContent = isRegistering
+        ? "Já tem uma conta? Entrar"
+        : "Não tem uma conta? Criar conta";
+
+    loginPassword.value = "";
+
+    showFeedback(loginFeedback, "");
+
+});
+
+
+// Enviar formulário
+
+emailLoginForm.addEventListener("submit", async (event) => {
+
+    event.preventDefault();
+
+    const email = loginEmail.value.trim();
+
+    const password = loginPassword.value;
+
+    if (!email || !password) {
+
+        showFeedback(
+            loginFeedback,
+            "Preencha todos os campos.",
+            false
+        );
+
+        return;
+
+    }
+
     try {
-        googleLogin.disabled = true;
-        googleLogin.textContent = "Conectando...";
+
+        loginSubmit.disabled = true;
+
+        loginSubmit.textContent = isRegistering
+            ? "Criando conta..."
+            : "Entrando...";
 
         showFeedback(loginFeedback, "");
 
-        await signInWithPopup(auth, googleProvider);
+        if (isRegistering) {
+
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+        } else {
+
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+        }
 
     } catch (error) {
-        console.error("Erro no login:", error);
 
-        let message = "Não foi possível entrar. Tente novamente.";
+        console.error("Erro na autenticação:", error);
 
-        if (error.code === "auth/popup-closed-by-user") {
-            message = "A janela de login foi fechada.";
-        }
+        const errors = {
 
-        if (error.code === "auth/popup-blocked") {
-            message = "Seu navegador bloqueou a janela de login.";
-        }
+            "auth/invalid-email":
+                "Digite um e-mail válido.",
 
-        if (error.code === "auth/unauthorized-domain") {
-            message = "Este domínio não está autorizado no Firebase.";
-        }
+            "auth/invalid-credential":
+                "E-mail ou senha incorretos.",
 
-        showFeedback(loginFeedback, message, false);
+            "auth/email-already-in-use":
+                "Este e-mail já possui uma conta.",
+
+            "auth/weak-password":
+                "A senha precisa ter pelo menos 6 caracteres.",
+
+            "auth/user-not-found":
+                "Não existe uma conta com este e-mail.",
+
+            "auth/wrong-password":
+                "Senha incorreta.",
+
+            "auth/too-many-requests":
+                "Muitas tentativas. Tente novamente mais tarde.",
+
+            "auth/operation-not-allowed":
+                "Ative o login por e-mail e senha no Firebase."
+
+        };
+
+        showFeedback(
+            loginFeedback,
+            errors[error.code] ||
+            "Não foi possível realizar a operação.",
+            false
+        );
 
     } finally {
-        googleLogin.disabled = false;
-        googleLogin.innerHTML = "<span>G</span> Entrar com Google";
+
+        loginSubmit.disabled = false;
+
+        loginSubmit.textContent = isRegistering
+            ? "Criar conta"
+            : "Entrar";
+
     }
+
 });
 
 
@@ -159,12 +267,19 @@ googleLogin.addEventListener("click", async () => {
 ======================================== */
 
 logoutButton.addEventListener("click", async () => {
+
     try {
+
         await signOut(auth);
+
     } catch (error) {
+
         console.error("Erro ao sair:", error);
+
         alert("Não foi possível sair da conta.");
+
     }
+
 });
 
 
@@ -175,21 +290,29 @@ logoutButton.addEventListener("click", async () => {
 onAuthStateChanged(auth, async (user) => {
 
     if (user) {
+
         currentUser = user;
 
         loginScreen.classList.add("hidden");
+
         appScreen.classList.remove("hidden");
 
         await loadUserProfile();
+
         await loadCommunity();
 
     } else {
+
         currentUser = null;
+
         currentProfile = null;
+
         communityUsers = [];
 
         appScreen.classList.add("hidden");
+
         loginScreen.classList.remove("hidden");
+
     }
 
 });
@@ -204,37 +327,58 @@ async function loadUserProfile() {
     if (!currentUser) return;
 
     try {
-        const profileRef = doc(db, "profiles", currentUser.uid);
+
+        const profileRef = doc(
+            db,
+            "profiles",
+            currentUser.uid
+        );
 
         const profileSnapshot = await getDoc(profileRef);
 
         if (profileSnapshot.exists()) {
+
             currentProfile = profileSnapshot.data();
+
         } else {
+
             currentProfile = {
+
                 name: currentUser.displayName || "Novo usuário",
+
                 email: currentUser.email || "",
+
                 photo: getDefaultPhoto(currentUser),
+
                 turma: "",
+
                 description: "",
+
                 role: "aluno"
+
             };
 
             await setDoc(profileRef, {
+
                 ...currentProfile,
+
                 criadoEm: serverTimestamp()
+
             });
+
         }
 
         updateProfileInterface();
 
     } catch (error) {
+
         console.error("Erro ao carregar perfil:", error);
 
         alert(
             "Não foi possível carregar seu perfil. " +
             "Verifique as regras do Firestore."
         );
+
     }
 
 }
@@ -277,6 +421,7 @@ function updateProfileInterface() {
 
     document.getElementById("profileDescription").value =
         currentProfile.description || "";
+
 }
 
 
@@ -306,23 +451,44 @@ profileForm.addEventListener("submit", async (event) => {
         document.getElementById("profileDescription").value.trim();
 
     if (!name) {
-        showFeedback(feedback, "Digite seu nome.", false);
+
+        showFeedback(
+            feedback,
+            "Digite seu nome.",
+            false
+        );
+
         return;
+
     }
 
     try {
+
         saveButton.disabled = true;
+
         saveButton.textContent = "Salvando...";
 
-        const profileRef = doc(db, "profiles", currentUser.uid);
+        const profileRef = doc(
+            db,
+            "profiles",
+            currentUser.uid
+        );
 
         const updatedProfile = {
+
             name,
+
             email: currentUser.email || "",
-            photo: currentProfile?.photo || getDefaultPhoto(currentUser),
+
+            photo: currentProfile?.photo ||
+                getDefaultPhoto(currentUser),
+
             turma,
+
             description,
+
             role: normalizeRole(currentProfile?.role)
+
         };
 
         await setDoc(profileRef, updatedProfile, {
@@ -330,17 +496,24 @@ profileForm.addEventListener("submit", async (event) => {
         });
 
         currentProfile = {
+
             ...currentProfile,
+
             ...updatedProfile
+
         };
 
         updateProfileInterface();
 
-        showFeedback(feedback, "Perfil atualizado com sucesso!");
+        showFeedback(
+            feedback,
+            "Perfil atualizado com sucesso!"
+        );
 
         await loadCommunity();
 
     } catch (error) {
+
         console.error("Erro ao salvar perfil:", error);
 
         showFeedback(
@@ -350,8 +523,11 @@ profileForm.addEventListener("submit", async (event) => {
         );
 
     } finally {
+
         saveButton.disabled = false;
+
         saveButton.textContent = "Salvar alterações";
+
     }
 
 });
@@ -369,6 +545,7 @@ async function loadCommunity() {
         '<p class="empty-message">Carregando participantes...</p>';
 
     try {
+
         const profilesRef = collection(db, "profiles");
 
         const snapshot = await getDocs(profilesRef);
@@ -380,12 +557,20 @@ async function loadCommunity() {
             const data = documentSnapshot.data();
 
             communityUsers.push({
+
                 id: documentSnapshot.id,
+
                 name: data.name || "Usuário",
-                photo: data.photo || "https://placehold.co/120x120?text=User",
+
+                photo: data.photo ||
+                    "https://placehold.co/120x120?text=User",
+
                 turma: data.turma || "",
+
                 description: data.description || "",
+
                 role: normalizeRole(data.role)
+
             });
 
         });
@@ -393,10 +578,12 @@ async function loadCommunity() {
         renderCommunity();
 
     } catch (error) {
+
         console.error("Erro ao carregar comunidade:", error);
 
         communityGrid.innerHTML =
             '<p class="empty-message">Não foi possível carregar a comunidade.</p>';
+
     }
 
 }
@@ -433,42 +620,58 @@ function renderCommunity() {
     });
 
     if (filteredUsers.length === 0) {
+
         communityGrid.innerHTML =
             '<p class="empty-message">Nenhuma pessoa encontrada.</p>';
 
         return;
+
     }
 
     filteredUsers.forEach((person) => {
 
         const card = document.createElement("article");
+
         card.className = "person-card";
 
         const photo = document.createElement("img");
+
         photo.src = person.photo;
+
         photo.alt = "Foto de " + person.name;
+
         photo.referrerPolicy = "no-referrer";
 
         const name = document.createElement("h3");
+
         name.textContent = person.name;
 
         const description = document.createElement("p");
+
         description.textContent =
-            person.description || "Ainda não adicionou uma descrição.";
+            person.description ||
+            "Ainda não adicionou uma descrição.";
 
         const turma = document.createElement("p");
+
         turma.textContent = person.turma
             ? "Turma: " + person.turma
             : "";
 
         const role = document.createElement("span");
+
         role.className = "person-role";
+
         role.textContent = roleLabel(person.role);
 
         card.appendChild(photo);
+
         card.appendChild(name);
+
         card.appendChild(description);
+
         card.appendChild(turma);
+
         card.appendChild(role);
 
         communityGrid.appendChild(card);
@@ -496,7 +699,9 @@ document.querySelectorAll(".filter-button").forEach((button) => {
     button.addEventListener("click", () => {
 
         document.querySelectorAll(".filter-button").forEach((item) => {
+
             item.classList.remove("active");
+
         });
 
         button.classList.add("active");
@@ -537,19 +742,29 @@ meetingForm.addEventListener("submit", async (event) => {
         document.getElementById("meetingMessage").value.trim();
 
     if (!person || !date || !time) {
-        showFeedback(feedback, "Preencha os campos obrigatórios.", false);
+
+        showFeedback(
+            feedback,
+            "Preencha os campos obrigatórios.",
+            false
+        );
+
         return;
+
     }
 
     const selectedDate = new Date(date + "T" + time);
 
     if (selectedDate <= new Date()) {
+
         showFeedback(
             feedback,
             "Escolha uma data e horário futuros.",
             false
         );
+
         return;
+
     }
 
     const submitButton = meetingForm.querySelector(
@@ -557,7 +772,9 @@ meetingForm.addEventListener("submit", async (event) => {
     );
 
     try {
+
         submitButton.disabled = true;
+
         submitButton.textContent = "Enviando...";
 
         await addDoc(collection(db, "meetingRequests"), {
@@ -566,7 +783,7 @@ meetingForm.addEventListener("submit", async (event) => {
 
             usuarioNome:
                 currentProfile?.name ||
-                currentUser.displayName ||
+                currentUser.email ||
                 "Usuário",
 
             convidado: person,
@@ -591,6 +808,7 @@ meetingForm.addEventListener("submit", async (event) => {
         );
 
     } catch (error) {
+
         console.error("Erro ao enviar sugestão:", error);
 
         showFeedback(
@@ -600,8 +818,11 @@ meetingForm.addEventListener("submit", async (event) => {
         );
 
     } finally {
+
         submitButton.disabled = false;
+
         submitButton.textContent = "Enviar sugestão →";
+
     }
 
 });
@@ -640,19 +861,24 @@ spinButton.addEventListener("click", () => {
     if (spinning) return;
 
     const possibleUsers = communityUsers.filter((person) => {
+
         return person.id !== currentUser?.uid;
+
     });
 
     if (possibleUsers.length === 0) {
+
         rouletteResult.textContent =
             "Ainda não existem participantes suficientes.";
 
         return;
+
     }
 
     spinning = true;
 
     spinButton.disabled = true;
+
     spinButton.textContent = "Sorteando...";
 
     rouletteResult.textContent = "A roleta está girando...";
@@ -660,18 +886,22 @@ spinButton.addEventListener("click", () => {
     rouletteVisual.classList.add("spinning");
 
     const winner =
-        possibleUsers[Math.floor(Math.random() * possibleUsers.length)];
+        possibleUsers[
+            Math.floor(Math.random() * possibleUsers.length)
+        ];
 
     setTimeout(() => {
 
         rouletteVisual.classList.remove("spinning");
 
         rouletteResult.textContent =
-            "🥑 " + winner.name + " pode ser o próximo convidado!";
+            "🥑 " + winner.name +
+            " pode ser o próximo convidado!";
 
         spinning = false;
 
         spinButton.disabled = false;
+
         spinButton.textContent = "Girar novamente!";
 
     }, 2500);
@@ -690,11 +920,15 @@ function navigateTo(pageName) {
     const navigationItems = document.querySelectorAll(".nav-item");
 
     pages.forEach((page) => {
+
         page.classList.remove("active");
+
     });
 
     navigationItems.forEach((item) => {
+
         item.classList.remove("active");
+
     });
 
     const selectedPage = document.getElementById(pageName);
@@ -708,23 +942,34 @@ function navigateTo(pageName) {
     );
 
     if (selectedButton) {
+
         selectedButton.classList.add("active");
+
     }
 
     const titles = {
+
         home: "Início",
+
         community: "Comunidade",
+
         meetings: "Conversas",
+
         roulette: "Roleta",
+
         profile: "Meu perfil"
+
     };
 
     document.getElementById("pageTitle").textContent =
         titles[pageName] || "aBAChat";
 
     window.scrollTo({
+
         top: 0,
+
         behavior: "smooth"
+
     });
 
 }
@@ -735,7 +980,9 @@ function navigateTo(pageName) {
 document.querySelectorAll(".nav-item").forEach((button) => {
 
     button.addEventListener("click", () => {
+
         navigateTo(button.dataset.page);
+
     });
 
 });
@@ -746,7 +993,9 @@ document.querySelectorAll(".nav-item").forEach((button) => {
 document.querySelectorAll("[data-go]").forEach((button) => {
 
     button.addEventListener("click", () => {
+
         navigateTo(button.dataset.go);
+
     });
 
 });
@@ -757,3 +1006,4 @@ document.querySelectorAll("[data-go]").forEach((button) => {
 ======================================== */
 
 console.log("🥑 aBAChat iniciado!");
+
