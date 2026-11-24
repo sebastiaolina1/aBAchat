@@ -5,597 +5,285 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#527d3c">
-
-    <title>aBAChat | A Behring Academy Chat</title>
-
+    <title>aBAChat — A Behring Academy Chat</title>
     <link rel="stylesheet" href="style.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
     <!-- LOGIN -->
     <section id="loginScreen" class="login-screen">
-        <div class="login-box">
+        <div class="login-card">
+            <div class="brand">
+                <div class="brand-icon">🥑</div>
+                <h1>aBAChat</h1>
+                <p>A Behring Academy Chat</p>
+            </div>
 
-            <div class="login-logo">🥑</div>
-
-            <h1>aBAChat</h1>
-
-            <p id="loginModeText">Entre na sua conta</p>
+            <div class="login-heading">
+                <h2 id="loginModeText">Entre na sua conta</h2>
+                <p>Conecte-se à comunidade Behring Academy.</p>
+            </div>
 
             <form id="emailLoginForm">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail" placeholder="seuemail@exemplo.com" autocomplete="email" required>
 
-                <input
-                    type="email"
-                    id="loginEmail"
-                    placeholder="Seu e-mail"
-                    autocomplete="email"
-                    required
-                >
+                <label for="loginPassword">Senha</label>
+                <input type="password" id="loginPassword" placeholder="Sua senha" minlength="6" autocomplete="current-password" required>
 
-                <input
-                    type="password"
-                    id="loginPassword"
-                    placeholder="Sua senha"
-                    autocomplete="current-password"
-                    minlength="6"
-                    required
-                >
-
-                <button type="submit" id="loginSubmit">
-                    Entrar
-                </button>
-
+                <button type="submit" id="loginSubmit" class="primary-button">Entrar</button>
+                <p id="loginFeedback" class="feedback"></p>
             </form>
 
-            <p id="loginFeedback" class="login-feedback"></p>
-
-            <button
-                type="button"
-                id="toggleAuthMode"
-                class="auth-toggle"
-            >
-                Não tem uma conta? Criar conta
-            </button>
-
+            <div class="login-switch">
+                <span id="loginSwitchText">Ainda não tem uma conta?</span>
+                <button type="button" id="toggleAuthMode">Criar conta</button>
+            </div>
         </div>
     </section>
-
 
     <!-- APLICAÇÃO -->
     <div id="appScreen" class="app-screen hidden">
 
-        <!-- MENU LATERAL -->
         <aside class="sidebar">
-
-            <div class="brand">
-                <span class="brand-icon">🥑</span>
-
+            <div class="sidebar-brand">
+                <span>🥑</span>
                 <div>
-                    <h2>aBAChat</h2>
+                    <strong>aBAChat</strong>
                     <small>Behring Academy</small>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
-
-                <button class="nav-item active" data-page="home">
-                    <span>⌂</span>
-                    Início
-                </button>
-
-                <button class="nav-item" data-page="community">
-                    <span>♧</span>
-                    Comunidade
-                </button>
-
-                <button class="nav-item" data-page="meetings">
-                    <span>▣</span>
-                    Conversas
-                </button>
-
-                <button class="nav-item" data-page="roulette">
-                    <span>◉</span>
-                    Roleta
-                </button>
-
-                <button class="nav-item" data-page="profile">
-                    <span>♙</span>
-                    Meu perfil
-                </button>
-
+            <nav class="navigation">
+                <button class="nav-item active" data-page="home">⌂ <span>Início</span></button>
+                <button class="nav-item" data-page="community">♧ <span>Comunidade</span></button>
+                <button class="nav-item" data-page="meetings">▣ <span>Conversas</span></button>
+                <button class="nav-item" data-page="roulette">◎ <span>Roleta</span></button>
+                <button class="nav-item" data-page="channel">▤ <span>Canal oficial</span></button>
+                <button class="nav-item" data-page="profile">◉ <span>Meu perfil</span></button>
             </nav>
 
-            <div class="sidebar-bottom">
-
-                <button id="logoutButton" class="logout-button">
-                    ↪ Sair da conta
-                </button>
-
-                <p>🥑 aBAChat · 2026</p>
-
-            </div>
-
+            <button id="logoutButton" class="logout-button">↪ Sair da conta</button>
         </aside>
 
-
-        <!-- CONTEÚDO PRINCIPAL -->
         <main class="main-content">
-
-            <!-- CABEÇALHO -->
             <header class="topbar">
-
                 <div>
                     <h1 id="pageTitle">Início</h1>
-                    <p>A Behring Academy Chat</p>
+                    <p>Um espaço para se conectar e compartilhar.</p>
                 </div>
 
-                <div class="header-user">
-
-                    <span id="headerUserName">Usuário</span>
-
-                    <img
-                        id="headerUserPhoto"
-                        src="https://placehold.co/120x120?text=User"
-                        alt="Foto do usuário"
-                    >
-
-                </div>
-
+                <button class="header-profile" data-go="profile">
+                    <img id="headerUserPhoto" src="https://placehold.co/100x100?text=🥑" alt="Foto de perfil">
+                    <span id="headerUserName">Participante</span>
+                </button>
             </header>
 
-
             <!-- INÍCIO -->
-            <section id="home" class="page active">
-
-                <div class="welcome-section">
-
-                    <div class="welcome-text">
-
-                        <span class="eyebrow">BEM-VINDO AO ABACHAT</span>
-
-                        <h2>
-                            Boas conversas.
-                            <span>Grandes conexões.</span>
-                        </h2>
-
-                        <p>
-                            Um espaço para conhecer pessoas, compartilhar
-                            experiências e aprender com outros integrantes
-                            da Behring Academy.
-                        </p>
-
-                        <h3>
-                            Olá, <span id="welcomeName">estudante</span>!
-                        </h3>
-
+            <section id="homePage" class="page active">
+                <div class="welcome-banner">
+                    <div>
+                        <span class="eyebrow">BEHRING ACADEMY</span>
+                        <h2>Olá, <span id="welcomeName">participante</span>!</h2>
+                        <p>Conheça pessoas, compartilhe experiências e faça novas conexões.</p>
+                        <button class="light-button" data-go="community">Conhecer a comunidade</button>
                     </div>
-
-                    <div class="welcome-illustration">
-                        🥑
-                    </div>
-
+                    <div class="welcome-emoji">🥑</div>
                 </div>
-
 
                 <div class="section-heading">
                     <h2>Explore o aBAChat</h2>
-                    <p>O que você gostaria de fazer hoje?</p>
+                    <p>Encontre novas formas de interagir.</p>
                 </div>
 
-
-                <div class="dashboard-grid">
-
-                    <article class="dashboard-card">
-
-                        <div class="dashboard-icon">♧</div>
-
+                <div class="home-grid">
+                    <article class="home-card">
+                        <span class="home-icon">👥</span>
                         <h3>Comunidade</h3>
-
-                        <p>
-                            Conheça outros estudantes, mentores
-                            e professores.
-                        </p>
-
-                        <button data-go="community">
-                            Conhecer pessoas →
-                        </button>
-
+                        <p>Conheça participantes de diferentes turmas e trilhas.</p>
+                        <button class="secondary-button" data-go="community">Explorar</button>
                     </article>
 
-
-                    <article class="dashboard-card">
-
-                        <div class="dashboard-icon">▣</div>
-
+                    <article class="home-card">
+                        <span class="home-icon">📅</span>
                         <h3>Conversas</h3>
-
-                        <p>
-                            Sugira encontros e participe de conversas
-                            com outros integrantes.
-                        </p>
-
-                        <button data-go="meetings">
-                            Ver conversas →
-                        </button>
-
+                        <p>Envie sugestões para conversar com outros participantes.</p>
+                        <button class="secondary-button" data-go="meetings">Ver conversas</button>
                     </article>
 
-
-                    <article class="dashboard-card">
-
-                        <div class="dashboard-icon">◉</div>
-
-                        <h3>Roleta</h3>
-
-                        <p>
-                            Descubra quem pode ser o próximo
-                            convidado do aBAChat.
-                        </p>
-
-                        <button data-go="roulette">
-                            Girar roleta →
-                        </button>
-
+                    <article class="home-card">
+                        <span class="home-icon">📢</span>
+                        <h3>Canal oficial</h3>
+                        <p>Acompanhe comunicados, novidades e atualizações.</p>
+                        <button class="secondary-button" data-go="channel">Acessar canal</button>
                     </article>
-
                 </div>
-
-
-                <div class="home-message">
-
-                    <span>🥑</span>
-
-                    <div>
-                        <h3>Conexões que aproximam pessoas</h3>
-
-                        <p>
-                            Conhecimento também se constrói por meio
-                            de boas conversas.
-                        </p>
-                    </div>
-
-                </div>
-
             </section>
-
 
             <!-- COMUNIDADE -->
-            <section id="community" class="page">
-
+            <section id="communityPage" class="page">
                 <div class="section-heading">
-
-                    <h2>Nossa comunidade</h2>
-
-                    <p>
-                        Conheça os integrantes da Behring Academy.
-                    </p>
-
+                    <h2>Comunidade</h2>
+                    <p>Encontre pessoas da Behring Academy.</p>
                 </div>
 
+                <input type="search" id="searchPeople" class="search-input" placeholder="Buscar por nome, turma ou trilha...">
 
-                <div class="community-controls">
-
-                    <input
-                        type="search"
-                        id="searchPeople"
-                        placeholder="Buscar por nome ou turma..."
-                    >
-
-                    <div class="filter-buttons">
-
-                        <button
-                            class="filter-button active"
-                            data-filter="todos"
-                        >
-                            Todos
-                        </button>
-
-                        <button
-                            class="filter-button"
-                            data-filter="aluno"
-                        >
-                            Alunos
-                        </button>
-
-                        <button
-                            class="filter-button"
-                            data-filter="mentor"
-                        >
-                            Mentores
-                        </button>
-
-                        <button
-                            class="filter-button"
-                            data-filter="professor"
-                        >
-                            Professores
-                        </button>
-
-                    </div>
-
+                <div class="filters">
+                    <button class="filter-button active" data-filter="todos">Todos</button>
+                    <button class="filter-button" data-filter="Nexus">Nexus</button>
+                    <button class="filter-button" data-filter="Jotateteus">Jotateteus</button>
+                    <button class="filter-button" data-filter="Sirius">Sirius</button>
                 </div>
-
 
                 <div id="communityGrid" class="community-grid">
-
-                    <p class="empty-message">
-                        Carregando participantes...
-                    </p>
-
+                    <p class="muted">Carregando participantes...</p>
                 </div>
-
             </section>
-
 
             <!-- CONVERSAS -->
-            <section id="meetings" class="page">
-
+            <section id="meetingsPage" class="page">
                 <div class="section-heading">
-
-                    <h2>Proponha uma conversa</h2>
-
-                    <p>
-                        Sugira alguém para participar de um encontro
-                        do aBAChat.
-                    </p>
-
+                    <h2>Sugestão de conversa</h2>
+                    <p>Proponha um encontro com alguém da comunidade.</p>
                 </div>
 
+                <form id="meetingForm" class="form-card">
+                    <label for="meetingPerson">Participante</label>
+                    <select id="meetingPerson" required>
+                        <option value="">Selecione uma pessoa</option>
+                    </select>
 
-                <div class="meeting-container">
-
-                    <div class="meeting-information">
-
-                        <div class="meeting-icon">🎥</div>
-
-                        <h3>Uma conversa pode gerar grandes ideias.</h3>
-
-                        <p>
-                            Escolha alguém da comunidade, sugira uma data
-                            e conte um pouco sobre o assunto que gostaria
-                            de conversar.
-                        </p>
-
-                        <div class="meeting-note">
-                            Os encontros poderão acontecer por
-                            videoconferência, conforme organização
-                            da equipe do aBAChat.
+                    <div class="form-row">
+                        <div>
+                            <label for="meetingDate">Data sugerida</label>
+                            <input type="date" id="meetingDate" required>
                         </div>
-
+                        <div>
+                            <label for="meetingTime">Horário sugerido</label>
+                            <input type="time" id="meetingTime" required>
+                        </div>
                     </div>
 
+                    <label for="meetingMessage">Assunto da conversa</label>
+                    <textarea id="meetingMessage" rows="4" placeholder="Sobre o que gostaria de conversar?"></textarea>
 
-                    <form id="meetingForm" class="meeting-form">
-
-                        <label for="meetingPerson">
-                            Quem você gostaria de convidar?
-                        </label>
-
-                        <input
-                            type="text"
-                            id="meetingPerson"
-                            placeholder="Nome do participante"
-                            required
-                        >
-
-
-                        <label for="meetingDate">
-                            Data sugerida
-                        </label>
-
-                        <input
-                            type="date"
-                            id="meetingDate"
-                            required
-                        >
-
-
-                        <label for="meetingTime">
-                            Horário sugerido
-                        </label>
-
-                        <input
-                            type="time"
-                            id="meetingTime"
-                            required
-                        >
-
-
-                        <label for="meetingMessage">
-                            Sobre o que gostaria de conversar?
-                        </label>
-
-                        <textarea
-                            id="meetingMessage"
-                            rows="5"
-                            placeholder="Conte um pouco sobre sua ideia..."
-                        ></textarea>
-
-
-                        <button type="submit">
-                            Enviar sugestão →
-                        </button>
-
-                        <p id="meetingFeedback"></p>
-
-                    </form>
-
-                </div>
-
+                    <button type="submit" class="primary-button">Enviar sugestão</button>
+                    <p id="meetingFeedback" class="feedback"></p>
+                </form>
             </section>
-
 
             <!-- ROLETA -->
-            <section id="roulette" class="page">
-
+            <section id="roulettePage" class="page">
                 <div class="section-heading">
-
                     <h2>Roleta aBAChat</h2>
-
-                    <p>
-                        Quem será o próximo convidado?
-                    </p>
-
+                    <p>Descubra quem poderá ser o próximo convidado.</p>
                 </div>
 
-
-                <div class="roulette-container">
-
-                    <div class="roulette-description">
-
-                        <span class="eyebrow">É HORA DE DESCOBRIR</span>
-
-                        <h3>
-                            Uma nova conexão
-                            pode começar aqui.
-                        </h3>
-
-                        <p>
-                            Gire a roleta para sortear um participante
-                            da comunidade que poderá ser convidado
-                            para uma conversa.
-                        </p>
-
-                    </div>
-
-
-                    <div class="roulette-game">
-
-                        <div
-                            id="rouletteVisual"
-                            class="roulette-visual"
-                        >
-                            🥑
-                        </div>
-
-                        <p id="rouletteResult">
-                            Pronto para sortear?
-                        </p>
-
-                        <button id="spinButton">
-                            Girar roleta
-                        </button>
-
-                    </div>
-
+                <div class="roulette-card">
+                    <div id="rouletteVisual" class="roulette-visual">🥑</div>
+                    <h3 id="rouletteResult">Quem será o próximo convidado?</h3>
+                    <button id="spinButton" class="primary-button">Girar roleta</button>
                 </div>
-
             </section>
 
+            <!-- CANAL OFICIAL -->
+            <section id="channelPage" class="page">
+                <div class="section-heading">
+                    <h2>Canal oficial</h2>
+                    <p>Comunicados, atualizações e novidades do aBAChat.</p>
+                </div>
+
+                <div class="channel-container">
+                    <div class="channel-header">
+                        <div class="channel-avatar">🥑</div>
+                        <div>
+                            <h3>Central aBAChat</h3>
+                            <p>Comunicados da comunidade</p>
+                        </div>
+                    </div>
+
+                    <div id="channelMessages" class="channel-messages">
+                        <p class="muted">Carregando mensagens...</p>
+                    </div>
+
+                    <form id="channelForm" class="channel-form hidden">
+                        <label for="channelMessageInput">Publicar comunicado</label>
+                        <textarea id="channelMessageInput" rows="3" maxlength="3000" placeholder="Escreva uma atualização, notícia ou comunicado..."></textarea>
+                        <button type="submit" class="primary-button">Publicar mensagem</button>
+                        <p id="channelFeedback" class="feedback"></p>
+                    </form>
+                </div>
+            </section>
 
             <!-- PERFIL -->
-            <section id="profile" class="page">
-
+            <section id="profilePage" class="page">
                 <div class="section-heading">
-
                     <h2>Meu perfil</h2>
-
-                    <p>
-                        Personalize suas informações na comunidade.
-                    </p>
-
+                    <p>Personalize sua apresentação na comunidade.</p>
                 </div>
 
-
-                <div class="profile-container">
-
+                <div class="profile-editor form-card">
                     <div class="profile-preview">
-
-                        <img
-                            id="profilePhoto"
-                            src="https://placehold.co/120x120?text=User"
-                            alt="Foto do perfil"
-                        >
-
-                        <h3 id="profileName">Seu nome</h3>
-
-                        <p id="profileEmail"></p>
-
+                        <div class="profile-banner" id="bannerPreview">
+                            <span>Prévia do banner</span>
+                        </div>
+                        <img id="profilePhotoPreview" class="profile-avatar" src="https://placehold.co/160x160?text=🥑" alt="Prévia da foto">
+                        <div class="profile-preview-name" id="profilePreviewName">Seu nome</div>
                     </div>
 
+                    <form id="profileForm">
+                        <label for="profileBannerFile">Foto de capa / banner</label>
+                        <input type="file" id="profileBannerFile" accept="image/png,image/jpeg,image/webp">
+                        <p class="field-hint">Recomendado: imagem horizontal. Máximo de 5 MB.</p>
 
-                    <form id="profileForm" class="profile-form">
+                        <label for="profilePhotoFile">Foto de perfil</label>
+                        <input type="file" id="profilePhotoFile" accept="image/png,image/jpeg,image/webp">
+                        <p class="field-hint">Máximo de 5 MB.</p>
 
-                        <label for="profileDisplayName">
-                            Nome de exibição
-                        </label>
+                        <label for="profileName">Nome completo</label>
+                        <input type="text" id="profileName" required maxlength="80">
 
-                        <input
-                            type="text"
-                            id="profileDisplayName"
-                            placeholder="Como deseja ser chamado?"
-                            required
-                        >
+                        <label for="profileDisplayName">Nome de exibição</label>
+                        <input type="text" id="profileDisplayName" maxlength="40" placeholder="Como deseja aparecer?">
 
+                        <label for="profileClass">Turma</label>
+                        <select id="profileClass" required>
+                            <option value="">Selecione sua turma</option>
+                            <option value="Nexus">Nexus</option>
+                            <option value="Jotateteus">Jotateteus</option>
+                            <option value="Sirius">Sirius</option>
+                        </select>
 
-                        <label for="profileClass">
-                            Turma
-                        </label>
+                        <label for="profileTrack">Trilha</label>
+                        <select id="profileTrack" required>
+                            <option value="">Selecione sua trilha</option>
+                            <option value="Fundamentos">Fundamentos</option>
+                            <option value="Competitiva">Competitiva</option>
+                            <option value="Desenvolvimento">Desenvolvimento</option>
+                            <option value="IA">IA</option>
+                        </select>
 
-                        <input
-                            type="text"
-                            id="profileClass"
-                            placeholder="Ex.: Nexus"
-                        >
+                        <label for="profileInstagram">Instagram (opcional)</label>
+                        <input type="text" id="profileInstagram" maxlength="40" placeholder="@seuusuario">
+                        <p class="field-hint">Se deixar vazio, o Instagram não aparecerá no seu perfil público.</p>
 
+                        <label for="profileDescription">Sobre você</label>
+                        <textarea id="profileDescription" rows="4" maxlength="500" placeholder="Conte um pouco sobre você..."></textarea>
 
-                        <label for="profileDescription">
-                            Sobre você
-                        </label>
-
-                        <textarea
-                            id="profileDescription"
-                            rows="5"
-                            placeholder="Conte um pouco sobre você..."
-                        ></textarea>
-
-
-                        <button
-                            type="submit"
-                            id="saveProfile"
-                        >
-                            Salvar alterações
-                        </button>
-
-                        <p id="profileFeedback"></p>
-
+                        <button type="submit" id="saveProfile" class="primary-button">Salvar perfil</button>
+                        <p id="profileFeedback" class="feedback"></p>
                     </form>
-
                 </div>
-
             </section>
 
-
-            <!-- RODAPÉ -->
-            <footer class="main-footer">
-
-                <p>
-                    🥑 aBAChat — A Behring Academy Chat
-                </p>
-
-                <p>
-                    Conectando pessoas, experiências e conhecimentos.
-                </p>
-
-                <a href="mailto:abachat.contato@gmail.com">
-                    Entre em contato
-                </a>
-
+            <footer class="app-footer">
+                <span>🥑 aBAChat — A Behring Academy Chat</span>
+                <a href="mailto:abachat.contato@gmail.com">Contato</a>
             </footer>
-
         </main>
-
     </div>
 
-
-    <!-- JAVASCRIPT -->
     <script type="module" src="app.js"></script>
-
 </body>
 </html>
